@@ -1,34 +1,35 @@
 local Hooks = {}
+local State = nil
 
-local function delete_buffer()
-  if not vim.t.lazygit or not vim.t.lazygit.bufnr then
-    return
-  end
-  local bufnr = vim.t.lazygit.bufnr
-  vim.t.lazygit.bufnr = nil
-  if vim.api.nvim_buf_is_valid(bufnr) then
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end
-end
-
-local function close_window()
-  if not vim.t.lazygit or not vim.t.lazygit.winid then
-    return
-  end
-  local winid = vim.t.lazygit.winid
-  vim.t.lazygit.winid = nil
+local function close_lazygit()
+  local winid = State.winid
   if vim.api.nvim_win_is_valid(winid) then
     vim.api.nvim_win_close(winid, true)
   end
+  local bufnr = State.bufnr
+  if vim.api.nvim_buf_is_valid(bufnr) then
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end
+  State = nil
+end
+
+local group = vim.api.nvim_create_augroup('LazyGitAugroup', {})
+local function buf_autocmds(bufnr)
+  vim.api.nvim_create_autocmd({ 'BufLeave' }, {
+    once = true,
+    buffer = bufnr,
+    group = group,
+    callback = function()
+      close_lazygit()
+      if Hooks.on_leave then
+        Hooks.on_leave()
+      end
+    end,
+  })
 end
 
 local function on_exit()
-  delete_buffer()
-  close_window()
-  vim.t.lazygit = nil
-  if Hooks.on_leave then
-    Hooks.on_leave()
-  end
+  vim.api.nvim_exec_autocmds('BufLeave', { group = group })
 end
 
 local function get_root(path)
@@ -41,8 +42,8 @@ local function get_root(path)
   return gitdir
 end
 
-local function lazygit(opts, path)
-  if not vim.t.lazygit then
+local function open_lazygit(opts, path)
+  if not State then
     local cmd
     if not path then
       cmd = 'lazygit'
@@ -63,12 +64,14 @@ local function lazygit(opts, path)
     vim.fn.termopen(cmd, { on_exit = on_exit })
     vim.cmd('startinsert')
 
-    vim.t.lazygit = { bufnr = bufnr, winid = winid, hidden = false }
+    buf_autocmds(bufnr)
+
+    State = { bufnr = bufnr, winid = winid }
     if Hooks.on_enter then
       Hooks.on_enter(bufnr, winid)
     end
   else
-    close_window()
+    vim.api.nvim_exec_autocmds('WinLeave', { group = group })
     if Hooks.on_leave then
       Hooks.on_leave()
     end
@@ -94,7 +97,7 @@ local function setup(opts)
   vim.env[config.env_name] = vim.v.servername
 
   vim.api.nvim_create_user_command('LazyGit', function(args)
-    lazygit(config.opts, args.args)
+    open_lazygit(config.opts, args.args)
   end, { nargs = '?', desc = 'Open lazygit', complete = 'dir' })
 
   Hooks.on_enter = config.on_enter
