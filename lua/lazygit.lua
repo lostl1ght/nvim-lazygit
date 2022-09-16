@@ -1,6 +1,19 @@
 local Hooks = {}
 local Opened = false
 
+local function close_lazygit(bufnr)
+  Opened = false
+  if vim.api.nvim_win_is_valid(0) then
+    vim.api.nvim_win_close(0, true)
+  end
+  if vim.api.nvim_buf_is_valid(bufnr) then
+    vim.api.nvim_buf_delete(bufnr, { force = true })
+  end
+  if Hooks.on_leave then
+    Hooks.on_leave()
+  end
+end
+
 local group = vim.api.nvim_create_augroup('LazyGitAugroup', {})
 local function buf_autocmds(bufnr)
   vim.api.nvim_create_autocmd('BufLeave', {
@@ -8,16 +21,7 @@ local function buf_autocmds(bufnr)
     buffer = bufnr,
     group = group,
     callback = function(args)
-      Opened = false
-      if vim.api.nvim_win_is_valid(0) then
-        vim.api.nvim_win_close(0, true)
-      end
-      if vim.api.nvim_buf_is_valid(args.buf) then
-        vim.api.nvim_buf_delete(args.buf, { force = true })
-      end
-      if Hooks.on_leave then
-        Hooks.on_leave()
-      end
+      close_lazygit(args.buf)
     end,
   })
 end
