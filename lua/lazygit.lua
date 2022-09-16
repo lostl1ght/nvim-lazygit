@@ -40,7 +40,7 @@ local function get_root(path)
   return gitdir
 end
 
-local function open_lazygit(opts, path)
+local function open_lazygit(path, factor, border)
   if not Opened then
     Opened = true
     local cmd
@@ -56,6 +56,17 @@ local function open_lazygit(opts, path)
         return
       end
     end
+
+    local wf = factor.width
+    local hf = factor.height
+    local opts = {
+      relative = 'editor',
+      col = math.floor((1 - wf) / 2 * vim.o.columns),
+      row = math.floor((1 - hf) / 2 * vim.o.lines),
+      width = math.floor(wf * vim.o.columns),
+      height = math.floor(hf * vim.o.lines),
+      border = border,
+    }
 
     local bufnr = vim.api.nvim_create_buf(true, true)
     local winid = vim.api.nvim_open_win(bufnr, true, opts)
@@ -73,14 +84,11 @@ local function open_lazygit(opts, path)
 end
 
 local default_config = {
-  opts = {
-    relative = 'editor',
-    col = math.floor(0.05 * vim.o.columns),
-    row = math.floor(0.05 * vim.o.lines),
-    width = math.floor(0.9 * vim.o.columns),
-    height = math.floor(0.9 * vim.o.lines),
-    border = 'single',
+  factor = {
+    width = 1,
+    height = 1,
   },
+  border = 'single',
   on_enter = nil,
   on_leave = nil,
 }
@@ -90,7 +98,7 @@ local function setup(opts)
   vim.env[config.env_name] = vim.v.servername
 
   vim.api.nvim_create_user_command('LazyGit', function(args)
-    open_lazygit(config.opts, args.args)
+    open_lazygit(args.args, config.factor, config.border)
   end, { nargs = '?', desc = 'Open lazygit', complete = 'dir' })
 
   Hooks.on_enter = config.on_enter
