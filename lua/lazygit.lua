@@ -1,26 +1,20 @@
 local Hooks = {}
-local State = nil
-
-local function close_lazygit()
-  local winid = State.winid
-  if vim.api.nvim_win_is_valid(winid) then
-    vim.api.nvim_win_close(winid, true)
-  end
-  local bufnr = State.bufnr
-  if vim.api.nvim_buf_is_valid(bufnr) then
-    vim.api.nvim_buf_delete(bufnr, { force = true })
-  end
-  State = nil
-end
+local Opened = false
 
 local group = vim.api.nvim_create_augroup('LazyGitAugroup', {})
 local function buf_autocmds(bufnr)
-  vim.api.nvim_create_autocmd({ 'BufLeave' }, {
+  vim.api.nvim_create_autocmd('BufLeave', {
     once = true,
     buffer = bufnr,
     group = group,
-    callback = function()
-      close_lazygit()
+    callback = function(args)
+      Opened = false
+      if vim.api.nvim_win_is_valid(0) then
+        vim.api.nvim_win_close(0, true)
+      end
+      if vim.api.nvim_buf_is_valid(args.buf) then
+        vim.api.nvim_buf_delete(args.buf, { force = true })
+      end
       if Hooks.on_leave then
         Hooks.on_leave()
       end
@@ -43,7 +37,8 @@ local function get_root(path)
 end
 
 local function open_lazygit(opts, path)
-  if not State then
+  if not Opened then
+    Opened = true
     local cmd
     if not path then
       cmd = 'lazygit'
@@ -53,6 +48,7 @@ local function open_lazygit(opts, path)
         cmd = 'lazygit -p ' .. gitdir
       else
         vim.notify('Lazygit: not a git repo', vim.log.levels.ERROR)
+        Opened = false
         return
       end
     end
@@ -66,20 +62,13 @@ local function open_lazygit(opts, path)
 
     buf_autocmds(bufnr)
 
-    State = { bufnr = bufnr, winid = winid }
     if Hooks.on_enter then
       Hooks.on_enter(bufnr, winid)
-    end
-  else
-    vim.api.nvim_exec_autocmds('WinLeave', { group = group })
-    if Hooks.on_leave then
-      Hooks.on_leave()
     end
   end
 end
 
 local default_config = {
-  env_name = 'NEOVIM_LAZYGIT',
   opts = {
     relative = 'editor',
     col = math.floor(0.05 * vim.o.columns),
