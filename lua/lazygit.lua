@@ -1,4 +1,3 @@
-local Hooks = {}
 local Opened = false
 
 local function close_lazygit(bufnr)
@@ -8,9 +7,6 @@ local function close_lazygit(bufnr)
   end
   if vim.api.nvim_buf_is_valid(bufnr) then
     vim.api.nvim_buf_delete(bufnr, { force = true })
-  end
-  if Hooks.on_leave then
-    Hooks.on_leave()
   end
 end
 
@@ -40,7 +36,7 @@ local function get_root(path)
   return gitdir
 end
 
-local function open_lazygit(path, factor, border)
+local function open_lazygit(path, width, height, border)
   if not Opened then
     Opened = true
     local cmd
@@ -57,14 +53,12 @@ local function open_lazygit(path, factor, border)
       end
     end
 
-    local wf = factor.width
-    local hf = factor.height
     local opts = {
       relative = 'editor',
-      col = math.floor((1 - wf) / 2 * vim.o.columns),
-      row = math.floor((1 - hf) / 2 * vim.o.lines),
-      width = math.floor(wf * vim.o.columns),
-      height = math.floor(hf * vim.o.lines),
+      col = math.floor((1 - width) / 2 * vim.o.columns),
+      row = math.floor((1 - height) / 2 * vim.o.lines),
+      width = math.floor(width * vim.o.columns),
+      height = math.floor(height * vim.o.lines),
       border = border,
     }
 
@@ -76,33 +70,20 @@ local function open_lazygit(path, factor, border)
     vim.cmd('startinsert')
 
     buf_autocmds(bufnr)
-
-    if Hooks.on_enter then
-      Hooks.on_enter(bufnr, winid)
-    end
   end
 end
 
 local default_config = {
-  factor = {
-    width = 1,
-    height = 1,
-  },
+  width = 1,
+  height = 1,
   border = 'single',
-  on_enter = nil,
-  on_leave = nil,
 }
 
 local function setup(opts)
   local config = vim.tbl_deep_extend('force', default_config, opts or {})
-  vim.env[config.env_name] = vim.v.servername
-
   vim.api.nvim_create_user_command('LazyGit', function(args)
-    open_lazygit(args.args, config.factor, config.border)
+    open_lazygit(args.args, config.width, config.height, config.border)
   end, { nargs = '?', desc = 'Open lazygit', complete = 'dir' })
-
-  Hooks.on_enter = config.on_enter
-  Hooks.on_leave = config.on_leave
 end
 
 return { setup = setup }
