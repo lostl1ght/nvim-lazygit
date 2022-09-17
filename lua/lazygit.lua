@@ -69,6 +69,9 @@ local function open_lazygit(path, width, height, border)
     vim.fn.termopen(cmd, { on_exit = on_exit })
     vim.cmd('startinsert')
 
+    vim.api.nvim_win_set_option(winid, 'sidescrolloff', 0)
+    vim.api.nvim_win_set_option(winid, 'virtualedit', '')
+    vim.api.nvim_buf_set_option(bufnr, 'bufhidden', 'wipe')
     buf_autocmds(bufnr)
   end
 end
