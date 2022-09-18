@@ -1,11 +1,6 @@
-local Opened = false
-
-local function close_lazygit()
-  Opened = false
-  if vim.api.nvim_win_is_valid(0) then
-    vim.api.nvim_win_close(0, true)
-  end
-end
+vim.g.lazygit_opened = false
+local Winid
+local Bufnr
 
 local group = vim.api.nvim_create_augroup('LazyGitAugroup', {})
 local function buf_autocmds(bufnr)
@@ -14,13 +9,19 @@ local function buf_autocmds(bufnr)
     buffer = bufnr,
     group = group,
     callback = function()
-      close_lazygit()
+      vim.g.lazygit_opened = false
+      if vim.api.nvim_win_is_valid(Winid) then
+        vim.api.nvim_win_close(Winid, true)
+      end
     end,
   })
 end
 
 local function on_exit()
-  vim.api.nvim_exec_autocmds('BufLeave', { group = group })
+  vim.g.lazygit_opened = false
+  if vim.api.nvim_win_is_valid(Winid) then
+    vim.api.nvim_win_close(Winid, true)
+  end
 end
 
 local function get_root(path)
@@ -34,8 +35,8 @@ local function get_root(path)
 end
 
 local function open_lazygit(path, width, height, border)
-  if not Opened then
-    Opened = true
+  if not vim.g.lazygit_opened then
+    vim.g.lazygit_opened = true
     local cmd
     if not path then
       cmd = 'lazygit'
@@ -45,7 +46,7 @@ local function open_lazygit(path, width, height, border)
         cmd = 'lazygit -p ' .. gitdir
       else
         vim.notify('Lazygit: not a git repo', vim.log.levels.ERROR)
-        Opened = false
+        vim.g.lazygit_opened = false
         return
       end
     end
@@ -59,18 +60,18 @@ local function open_lazygit(path, width, height, border)
       border = border,
     }
 
-    local bufnr = vim.api.nvim_create_buf(true, true)
-    local winid = vim.api.nvim_open_win(bufnr, true, opts)
-    vim.api.nvim_win_set_buf(winid, bufnr)
+    Bufnr = vim.api.nvim_create_buf(false, true)
+    Winid = vim.api.nvim_open_win(Bufnr, true, opts)
+    vim.api.nvim_win_set_buf(Winid, Bufnr)
 
     vim.fn.termopen(cmd, { on_exit = on_exit })
     vim.cmd('startinsert')
 
-    vim.api.nvim_win_set_option(winid, 'sidescrolloff', 0)
-    vim.api.nvim_win_set_option(winid, 'virtualedit', '')
-    vim.api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:LazyGitNormal')
-    vim.api.nvim_buf_set_option(bufnr, 'bufhidden', 'wipe')
-    buf_autocmds(bufnr)
+    vim.api.nvim_win_set_option(Winid, 'sidescrolloff', 0)
+    vim.api.nvim_win_set_option(Winid, 'virtualedit', '')
+    vim.api.nvim_win_set_option(Winid, 'winhl', 'NormalFloat:LazyGitNormal')
+    vim.api.nvim_buf_set_option(Bufnr, 'bufhidden', 'wipe')
+    buf_autocmds(Bufnr)
   end
 end
 
