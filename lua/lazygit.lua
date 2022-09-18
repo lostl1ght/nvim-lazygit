@@ -2,26 +2,21 @@ vim.g.lazygit_opened = false
 local Winid
 local Bufnr
 
+local function on_exit()
+  vim.g.lazygit_opened = false
+  if vim.api.nvim_win_is_valid(Winid) then
+    vim.api.nvim_win_close(Winid, true)
+  end
+end
+
 local group = vim.api.nvim_create_augroup('LazyGitAugroup', {})
 local function buf_autocmds(bufnr)
   vim.api.nvim_create_autocmd('BufLeave', {
     once = true,
     buffer = bufnr,
     group = group,
-    callback = function()
-      vim.g.lazygit_opened = false
-      if vim.api.nvim_win_is_valid(Winid) then
-        vim.api.nvim_win_close(Winid, true)
-      end
-    end,
+    callback = on_exit,
   })
-end
-
-local function on_exit()
-  vim.g.lazygit_opened = false
-  if vim.api.nvim_win_is_valid(Winid) then
-    vim.api.nvim_win_close(Winid, true)
-  end
 end
 
 local function get_root(path)
