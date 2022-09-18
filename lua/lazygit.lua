@@ -1,12 +1,9 @@
 local Opened = false
 
-local function close_lazygit(bufnr)
+local function close_lazygit()
   Opened = false
   if vim.api.nvim_win_is_valid(0) then
     vim.api.nvim_win_close(0, true)
-  end
-  if vim.api.nvim_buf_is_valid(bufnr) then
-    vim.api.nvim_buf_delete(bufnr, { force = true })
   end
 end
 
@@ -16,8 +13,8 @@ local function buf_autocmds(bufnr)
     once = true,
     buffer = bufnr,
     group = group,
-    callback = function(args)
-      close_lazygit(args.buf)
+    callback = function()
+      close_lazygit()
     end,
   })
 end
@@ -71,6 +68,7 @@ local function open_lazygit(path, width, height, border)
 
     vim.api.nvim_win_set_option(winid, 'sidescrolloff', 0)
     vim.api.nvim_win_set_option(winid, 'virtualedit', '')
+    vim.api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:LazyGitNormal')
     vim.api.nvim_buf_set_option(bufnr, 'bufhidden', 'wipe')
     buf_autocmds(bufnr)
   end
@@ -87,6 +85,7 @@ local function setup(opts)
   vim.api.nvim_create_user_command('LazyGit', function(args)
     open_lazygit(args.args, config.width, config.height, config.border)
   end, { nargs = '?', desc = 'Open lazygit', complete = 'dir' })
+  vim.api.nvim_set_hl(0, 'LazyGitNormal', { link = 'NormalFloat', default = true })
 end
 
 return { setup = setup }
