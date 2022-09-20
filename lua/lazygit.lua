@@ -100,7 +100,7 @@ local default_config = {
 }
 
 local function setup(opts)
-  Config = vim.tbl_deep_extend('force', default_config, opts or {})
+  Config = vim.tbl_extend('force', default_config, opts or {})
   api.nvim_create_user_command('LazyGit', function(args)
     open_lazygit(args.args)
   end, { nargs = '?', desc = 'Open lazygit', complete = 'dir' })
