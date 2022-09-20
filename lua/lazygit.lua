@@ -11,10 +11,13 @@ local function on_exit()
   vim.g.lazygit_loaded = false
   api.nvim_buf_set_var(Bufnr, 'bufhidden', 'wipe')
   local winid = fn.bufwinid(Bufnr)
-  Bufnr = nil
   if api.nvim_win_is_valid(winid) then
     api.nvim_win_close(winid, true)
   end
+  if api.nvim_buf_is_valid(Bufnr) then
+    api.nvim_buf_delete(Bufnr, { force = true })
+  end
+  Bufnr = nil
 end
 
 local function buf_autocmds(bufnr)
@@ -47,11 +50,9 @@ local function open_lazygit(path)
     on_exit()
   else
     Opened = true
-    if not Bufnr then
+    if not vim.g.lazygit_loaded then
       Bufnr = api.nvim_create_buf(false, true)
       buf_autocmds(Bufnr)
-      api.nvim_buf_set_option(Bufnr, 'bufhidden', 'hide')
-      api.nvim_buf_set_option(Bufnr, 'filetype', 'lazygit')
     end
 
     local opts = {
@@ -64,8 +65,6 @@ local function open_lazygit(path)
     }
     local winid = api.nvim_open_win(Bufnr, true, opts)
     api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:LazyGitNormal,FloatBorder:LazyGitBorder')
-    api.nvim_win_set_option(winid, 'sidescrolloff', 0)
-    api.nvim_win_set_option(winid, 'virtualedit', '')
 
     if not vim.g.lazygit_loaded then
       local dir = path or fn.getcwd()
@@ -80,6 +79,8 @@ local function open_lazygit(path)
         return
       end
       fn.termopen(cmd, { on_exit = on_exit, width = opts.width })
+      api.nvim_buf_set_option(Bufnr, 'bufhidden', 'hide')
+      api.nvim_buf_set_option(Bufnr, 'filetype', 'lazygit')
       vim.g.lazygit_loaded = true
     end
 
