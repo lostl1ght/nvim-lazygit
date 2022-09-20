@@ -3,36 +3,39 @@ local Bufnr = nil
 local Opened = false
 local Config = nil
 
+local api = vim.api
+local fn = vim.fn
+
 local function on_exit()
   Opened = false
   vim.g.lazygit_loaded = false
-  vim.api.nvim_buf_set_var(Bufnr, 'bufhidden', 'wipe')
-  local winid = vim.fn.bufwinid(Bufnr)
+  api.nvim_buf_set_var(Bufnr, 'bufhidden', 'wipe')
+  local winid = fn.bufwinid(Bufnr)
   Bufnr = nil
-  if vim.api.nvim_win_is_valid(winid) then
-    vim.api.nvim_win_close(winid, true)
+  if api.nvim_win_is_valid(winid) then
+    api.nvim_win_close(winid, true)
   end
 end
 
 local function buf_autocmds(bufnr)
-  local group = vim.api.nvim_create_augroup('LazyGitBuffer', {})
-  vim.api.nvim_create_autocmd({ 'WinLeave', 'BufDelete', 'BufLeave' }, {
+  local group = api.nvim_create_augroup('LazyGitBuffer', {})
+  api.nvim_create_autocmd({ 'WinLeave', 'BufDelete', 'BufLeave' }, {
     buffer = bufnr,
     group = group,
     callback = function(args)
       Opened = false
-      local winid = vim.fn.bufwinid(args.buf)
-      if vim.api.nvim_win_is_valid(winid) then
-        vim.api.nvim_win_close(winid, true)
+      local winid = fn.bufwinid(args.buf)
+      if api.nvim_win_is_valid(winid) then
+        api.nvim_win_close(winid, true)
       end
     end,
   })
 end
 
 local function get_root(path)
-  local dir = vim.fn.fnamemodify(vim.fn.resolve(vim.fn.expand(path)), ':p:h')
+  local dir = fn.fnamemodify(fn.resolve(fn.expand(path)), ':p:h')
   local cmd = string.format('cd %s && git rev-parse --show-toplevel', dir)
-  local gitdir = vim.fn.system(cmd)
+  local gitdir = fn.system(cmd)
   if gitdir:match('^fatal:.*') then
     return nil
   end
@@ -45,10 +48,10 @@ local function open_lazygit(path)
   else
     Opened = true
     if not Bufnr then
-      Bufnr = vim.api.nvim_create_buf(false, true)
+      Bufnr = api.nvim_create_buf(false, true)
       buf_autocmds(Bufnr)
-      vim.api.nvim_buf_set_option(Bufnr, 'bufhidden', 'hide')
-      vim.api.nvim_buf_set_option(Bufnr, 'filetype', 'lazygit')
+      api.nvim_buf_set_option(Bufnr, 'bufhidden', 'hide')
+      api.nvim_buf_set_option(Bufnr, 'filetype', 'lazygit')
     end
 
     local opts = {
@@ -59,17 +62,13 @@ local function open_lazygit(path)
       height = math.floor(Config.height * vim.o.lines),
       border = Config.border,
     }
-    local winid = vim.api.nvim_open_win(Bufnr, true, opts)
-    vim.api.nvim_win_set_option(
-      winid,
-      'winhl',
-      'NormalFloat:LazyGitNormal,FloatBorder:LazyGitBorder'
-    )
-    vim.api.nvim_win_set_option(winid, 'sidescrolloff', 0)
-    vim.api.nvim_win_set_option(winid, 'virtualedit', '')
+    local winid = api.nvim_open_win(Bufnr, true, opts)
+    api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:LazyGitNormal,FloatBorder:LazyGitBorder')
+    api.nvim_win_set_option(winid, 'sidescrolloff', 0)
+    api.nvim_win_set_option(winid, 'virtualedit', '')
 
     if not vim.g.lazygit_loaded then
-      local dir = path or vim.fn.getcwd()
+      local dir = path or fn.getcwd()
       local gitdir = get_root(dir)
       local cmd
       if gitdir then
@@ -80,7 +79,7 @@ local function open_lazygit(path)
         on_exit()
         return
       end
-      vim.fn.termopen(cmd, { on_exit = on_exit, width = opts.width })
+      fn.termopen(cmd, { on_exit = on_exit, width = opts.width })
       vim.g.lazygit_loaded = true
     end
 
@@ -96,11 +95,11 @@ local default_config = {
 
 local function setup(opts)
   Config = vim.tbl_deep_extend('force', default_config, opts or {})
-  vim.api.nvim_create_user_command('LazyGit', function(args)
+  api.nvim_create_user_command('LazyGit', function(args)
     open_lazygit(args.args)
   end, { nargs = '?', desc = 'Open lazygit', complete = 'dir' })
-  vim.api.nvim_set_hl(0, 'LazyGitNormal', { link = 'NormalFloat', default = true })
-  vim.api.nvim_set_hl(0, 'LazyGitBorder', { link = 'FloatBorder', default = true })
+  api.nvim_set_hl(0, 'LazyGitNormal', { link = 'NormalFloat', default = true })
+  api.nvim_set_hl(0, 'LazyGitBorder', { link = 'FloatBorder', default = true })
 end
 
 return { setup = setup, open_lazygit = open_lazygit }
