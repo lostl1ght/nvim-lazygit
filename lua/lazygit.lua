@@ -1,8 +1,10 @@
 vim.g.lazygit_loaded = false
 local Bufnr = nil
+local Opened = false
 local Config = nil
 
 local function on_exit()
+  Opened = false
   vim.g.lazygit_loaded = false
   vim.api.nvim_buf_set_var(Bufnr, 'bufhidden', 'wipe')
   local winid = vim.fn.bufwinid(Bufnr)
@@ -18,6 +20,7 @@ local function buf_autocmds(bufnr)
     buffer = bufnr,
     group = group,
     callback = function(args)
+      Opened = false
       local winid = vim.fn.bufwinid(args.buf)
       if vim.api.nvim_win_is_valid(winid) then
         vim.api.nvim_win_close(winid, true)
@@ -37,49 +40,57 @@ local function get_root(path)
 end
 
 local function open_lazygit(path)
-  local dir = path or vim.fn.getcwd()
-  local gitdir = get_root(dir)
-  local cmd
-  if gitdir then
-    cmd = 'lazygit -p ' .. gitdir
+  if Opened then
+    on_exit()
   else
-    vim.notify('Lazygit: not a git repo', vim.log.levels.ERROR)
-    return
+    Opened = true
+    if not Bufnr then
+      Bufnr = vim.api.nvim_create_buf(false, true)
+      buf_autocmds(Bufnr)
+      vim.api.nvim_buf_set_option(Bufnr, 'bufhidden', 'hide')
+      vim.api.nvim_buf_set_option(Bufnr, 'filetype', 'lazygit')
+    end
+
+    local opts = {
+      relative = 'editor',
+      col = math.floor((1 - Config.width) / 2 * vim.o.columns),
+      row = math.floor((1 - Config.height) / 2 * vim.o.lines),
+      width = math.floor(Config.width * vim.o.columns),
+      height = math.floor(Config.height * vim.o.lines),
+      border = Config.border,
+    }
+    local winid = vim.api.nvim_open_win(Bufnr, true, opts)
+    vim.api.nvim_win_set_option(
+      winid,
+      'winhl',
+      'NormalFloat:LazyGitNormal,FloatBorder:LazyGitBorder'
+    )
+    vim.api.nvim_win_set_option(winid, 'sidescrolloff', 0)
+    vim.api.nvim_win_set_option(winid, 'virtualedit', '')
+
+    if not vim.g.lazygit_loaded then
+      local dir = path or vim.fn.getcwd()
+      local gitdir = get_root(dir)
+      local cmd
+      if gitdir then
+        cmd = 'lazygit -p ' .. gitdir
+      else
+        Opened = false
+        vim.notify('Lazygit: not a git repo', vim.log.levels.ERROR)
+        on_exit()
+        return
+      end
+      vim.fn.termopen(cmd, { on_exit = on_exit, width = opts.width })
+      vim.g.lazygit_loaded = true
+    end
+
+    vim.cmd('startinsert')
   end
-
-  local opts = {
-    relative = 'editor',
-    col = math.floor((1 - Config.width) / 2 * vim.o.columns),
-    row = math.floor((1 - Config.height) / 2 * vim.o.lines),
-    width = math.floor(Config.width * vim.o.columns),
-    height = math.floor(Config.height * vim.o.lines),
-    border = Config.border,
-  }
-
-  if not Bufnr then
-    Bufnr = vim.api.nvim_create_buf(true, true)
-    buf_autocmds(Bufnr)
-    vim.api.nvim_buf_set_option(Bufnr, 'bufhidden', 'hide')
-    vim.api.nvim_buf_set_option(Bufnr, 'filetype', 'lazygit')
-  end
-
-  local winid = vim.api.nvim_open_win(Bufnr, true, opts)
-  vim.api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:LazyGitNormal,FloatBorder:LazyGitBorder')
-  vim.api.nvim_win_set_option(winid, 'sidescrolloff', 0)
-  vim.api.nvim_win_set_option(winid, 'virtualedit', '')
-
-  if not vim.g.lazygit_loaded then
-    vim.fn.termopen(cmd, { on_exit = on_exit })
-    vim.g.lazygit_loaded = true
-  end
-
-  vim.api.nvim_feedkeys('0', 'n', false)
-  vim.cmd('startinsert')
 end
 
 local default_config = {
-  width = 1,
-  height = 1,
+  width = 0.9,
+  height = 0.9,
   border = 'none',
 }
 
