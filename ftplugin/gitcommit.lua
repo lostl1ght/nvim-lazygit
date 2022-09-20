@@ -1,4 +1,4 @@
-if _LazyGitLoaded then
+if vim.g.lazygit_loaded then
   local group = vim.api.nvim_create_augroup('LazyGitRemote', {})
   vim.api.nvim_create_autocmd('BufUnload', {
     group = group,

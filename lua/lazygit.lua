@@ -1,12 +1,12 @@
-_LazyGitLoaded = false
-_LazyGitBufnr = nil
-_LazyGitConfig = nil
+vim.g.lazygit_loaded = false
+local Bufnr = nil
+local Config = nil
 
 local function on_exit()
-  _LazyGitLoaded = false
-  vim.bo[_LazyGitBufnr].bufhidden = 'wipe'
-  local winid = vim.fn.bufwinid(_LazyGitBufnr)
-  _LazyGitBufnr = nil
+  vim.g.lazygit_loaded = false
+  vim.api.nvim_buf_set_var(Bufnr, 'bufhidden', 'wipe')
+  local winid = vim.fn.bufwinid(Bufnr)
+  Bufnr = nil
   if vim.api.nvim_win_is_valid(winid) then
     vim.api.nvim_win_close(winid, true)
   end
@@ -49,28 +49,28 @@ local function open_lazygit(path)
 
   local opts = {
     relative = 'editor',
-    col = math.floor((1 - _LazyGitConfig.width) / 2 * vim.o.columns),
-    row = math.floor((1 - _LazyGitConfig.height) / 2 * vim.o.lines),
-    width = math.floor(_LazyGitConfig.width * vim.o.columns),
-    height = math.floor(_LazyGitConfig.height * vim.o.lines),
-    border = _LazyGitConfig.border,
+    col = math.floor((1 - Config.width) / 2 * vim.o.columns),
+    row = math.floor((1 - Config.height) / 2 * vim.o.lines),
+    width = math.floor(Config.width * vim.o.columns),
+    height = math.floor(Config.height * vim.o.lines),
+    border = Config.border,
   }
 
-  if not _LazyGitBufnr then
-    _LazyGitBufnr = vim.api.nvim_create_buf(false, true)
-    buf_autocmds(_LazyGitBufnr)
-    vim.bo[_LazyGitBufnr].bufhidden = 'hide'
-    vim.bo[_LazyGitBufnr].filetype = 'lazygit'
+  if not Bufnr then
+    Bufnr = vim.api.nvim_create_buf(true, true)
+    buf_autocmds(Bufnr)
+    vim.api.nvim_buf_set_option(Bufnr, 'bufhidden', 'hide')
+    vim.api.nvim_buf_set_option(Bufnr, 'filetype', 'lazygit')
   end
 
-  local winid = vim.api.nvim_open_win(_LazyGitBufnr, true, opts)
-  vim.wo[winid].winhl = 'NormalFloat:LazyGitNormal,FloatBorder:LazyGitBorder'
-  vim.wo[winid].sidescrolloff = 0
-  vim.wo[winid].virtualedit = ''
+  local winid = vim.api.nvim_open_win(Bufnr, true, opts)
+  vim.api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:LazyGitNormal,FloatBorder:LazyGitBorder')
+  vim.api.nvim_win_set_option(winid, 'sidescrolloff', 0)
+  vim.api.nvim_win_set_option(winid, 'virtualedit', '')
 
-  if not _LazyGitLoaded then
+  if not vim.g.lazygit_loaded then
     vim.fn.termopen(cmd, { on_exit = on_exit })
-    _LazyGitLoaded = true
+    vim.g.lazygit_loaded = true
   end
 
   vim.api.nvim_feedkeys('0', 'n', false)
@@ -84,7 +84,7 @@ local default_config = {
 }
 
 local function setup(opts)
-  _LazyGitConfig = vim.tbl_deep_extend('force', default_config, opts or {})
+  Config = vim.tbl_deep_extend('force', default_config, opts or {})
   vim.api.nvim_create_user_command('LazyGit', function(args)
     open_lazygit(args.args)
   end, { nargs = '?', desc = 'Open lazygit', complete = 'dir' })
