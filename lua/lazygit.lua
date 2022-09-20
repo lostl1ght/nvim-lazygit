@@ -60,7 +60,9 @@ local function open_lazygit(path)
     _LazyGitBufnr = vim.api.nvim_create_buf(false, true)
     buf_autocmds(_LazyGitBufnr)
     vim.bo[_LazyGitBufnr].bufhidden = 'hide'
+    vim.bo[_LazyGitBufnr].filetype = 'lazygit'
   end
+
   local winid = vim.api.nvim_open_win(_LazyGitBufnr, true, opts)
   vim.wo[winid].winhl = 'NormalFloat:LazyGitNormal,FloatBorder:LazyGitBorder'
   vim.wo[winid].sidescrolloff = 0
@@ -71,13 +73,14 @@ local function open_lazygit(path)
     _LazyGitLoaded = true
   end
 
+  vim.api.nvim_feedkeys('0', 'n', false)
   vim.cmd('startinsert')
 end
 
 local default_config = {
   width = 1,
   height = 1,
-  border = 'single',
+  border = 'none',
 }
 
 local function setup(opts)
