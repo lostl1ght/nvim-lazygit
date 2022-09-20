@@ -83,7 +83,12 @@ local function open_lazygit(path)
       vim.g.lazygit_loaded = true
     end
 
-    vim.cmd('startinsert')
+    -- because *sometimes* terminal slides to the left for no reason
+    -- this seems to fix that
+    api.nvim_win_set_cursor(winid, { 1, 0 })
+    vim.schedule(function()
+      api.nvim_exec('startinsert!', false)
+    end)
   end
 end
 
