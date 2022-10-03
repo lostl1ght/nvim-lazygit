@@ -6,7 +6,6 @@ local PrevWinid
 local Config
 
 local api = vim.api
-local fn = vim.fn
 
 local function on_exit()
   Opened = false
@@ -21,11 +20,13 @@ local function on_exit()
 end
 
 local function get_root(path)
-  return vim.fs.dirname(vim.fs.find('.git', {
-    path = path,
-    upward = true,
-    type = 'directory',
-  })[1])
+  local dir = vim.fn.fnamemodify(vim.fn.resolve(vim.fn.expand(path)), ':p:h')
+  local cmd = string.format("cd %s && git rev-parse --show-toplevel", dir)
+  local gitdir = vim.fn.system(cmd)
+  if gitdir:match('^fatal:.*') then
+    return nil
+  end
+  return gitdir
 end
 
 local function open(path)
@@ -63,7 +64,7 @@ local function open(path)
         on_exit()
         return
       end
-      fn.termopen(cmd, { on_exit = on_exit, width = opts.width })
+      vim.fn.termopen(cmd, { on_exit = on_exit, width = opts.width })
       api.nvim_buf_set_option(Bufnr, 'bufhidden', 'hide')
       api.nvim_buf_set_option(Bufnr, 'filetype', 'lazygit')
       vim.g.lazygit_loaded = true

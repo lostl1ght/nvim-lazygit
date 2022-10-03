@@ -13,9 +13,11 @@ and avoids nested instances.
 * [Usage](#usage)
 * [Acknowledgement](#acknowledgement)
 
+# Neovim 0.7 compatibility branch
+
 ## Requirements
 
-* Neovim 0.8+
+* Neovim 0.7
 * python 3 and [neovim-remote](https://github.com/mhinz/neovim-remote)
 
 ## Installation
@@ -32,7 +34,7 @@ use({
       -- configuration or leave empty for defaults
     })
   end,
-  tag = '*',
+  branch = '0.7-compat',
   cmd = 'LazyGit'
 })
 ```
