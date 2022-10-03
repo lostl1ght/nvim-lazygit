@@ -72,6 +72,8 @@ bash/zsh:
 if [[ -n "$NVIM" ]]; then
   alias nvim="nvim --server $NVIM --remote"
   export GIT_EDITOR="nvr --servername $NVIM --remote-wait +'lua require\"lazygit\"._edit_commit()'"
+else
+  export GIT_EDITOR="nvim"
 fi
 ```
 
@@ -80,6 +82,8 @@ fish:
 if set -q NVIM
   alias nvim "nvim --server $NVIM --remote"
   set -gx GIT_EDITOR "nvr --servername $NVIM --remote-wait +'lua require\"lazygit\"._edit_commit()'"
+else
+  set -gx GIT_EDITOR "nvim"
 end
 ```
 

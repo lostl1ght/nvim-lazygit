@@ -5,6 +5,7 @@
 #### Changed
 
 #### Fixed
+- Add else clause in readme for setting `GIT_EDITOR`
 
 #### Updated
 
