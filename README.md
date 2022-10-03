@@ -15,7 +15,7 @@ and avoids nested instances.
 
 ## Requirements
 
-* Neovim 0.8+
+* Neovim 0.8 (for Neovim 0.7 see [0.7-compat](https://github.com/lostl1ght/nvim-lazygit/tree/0.7-compat) branch)
 * python 3 and [neovim-remote](https://github.com/mhinz/neovim-remote)
 
 ## Installation

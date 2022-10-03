@@ -1,6 +1,7 @@
 # [Unreleased]
 
 #### Added
+- Neovim 0.7 compatibility branch
 
 #### Changed
 
