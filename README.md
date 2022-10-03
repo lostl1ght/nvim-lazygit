@@ -49,9 +49,9 @@ Default `setup` values:
 
 ```lua
 {
-  width = 1,
-  height = 1,
-  border = 'none'
+  width = 0.9,
+  height = 0.9,
+  border = 'none',
 }
 ```
 
