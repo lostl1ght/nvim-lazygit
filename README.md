@@ -32,6 +32,7 @@ use({
       -- configuration or leave empty for defaults
     })
   end,
+  tag = '*',
   cmd = 'LazyGit'
 })
 ```

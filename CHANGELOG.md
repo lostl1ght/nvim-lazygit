@@ -3,7 +3,15 @@
 #### Added
 
 #### Changed
-- Removed auto commands, now closing is manual
+
+#### Fixed
+
+#### Updated
+
+# [v0.2.0]
+
+#### Changed
+- Removed auto commands, now the window is closed manually from code
 - Default `width` and `height` are now 0.9
 - Use `vim.fs` instead of `vim.fn.system`
 
