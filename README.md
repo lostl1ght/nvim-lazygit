@@ -7,6 +7,8 @@ and avoids nested instances.
 * [Requirements](#requirements)
 * [Installation](#installation)
 * [Configuration](#configuration)
+    * [Values](#values)
+    * [External](#external)
     * [Highlight](#highlight)
 * [Usage](#usage)
 * [Acknowledgement](#acknowledgement)
@@ -34,12 +36,11 @@ use({
 })
 ```
 
-Until Neovim releases `--remote-wait` [neovim-remote](https://github.com/mhinz/neovim-remote)
+Until Neovim releases `--remote-wait` and `+<cmd>` [neovim-remote](https://github.com/mhinz/neovim-remote)
 must be installed too.
 
 ```bash
 pip install neovim-remote
-
 ```
 
 ## Configuration
@@ -48,13 +49,20 @@ Default `setup` values:
 
 ```lua
 {
-  width = 1, -- width scaling factor [0;1]
-  height = 1, -- height scaling factor [0;1]
-  border = 'none' -- 'none', 'single', 'double',
-                  -- 'rounded', 'solid', 'shadow'
-                  -- or see :h nvim_open_win() for custom definitions
+  width = 1,
+  height = 1,
+  border = 'none'
 }
 ```
+
+### Values
+
+`width` and `height` are technically any in `[0;1]` but do not make them too small.
+
+`border` is one of `{'none', 'single', 'double', 'rounded', 'solid', 'shadow'}` or see `:h nvim_open_win()`
+for custom definitions.
+
+### External
 
 To avoid nested Neovim instances set up the following variables:
 
@@ -62,10 +70,7 @@ bash/zsh:
 ```bash
 if [[ -n "$NVIM" ]]; then
   alias nvim="nvim --server $NVIM --remote"
-  export EDITOR="nvim --server $NVIM --remote"
-  export GIT_EDITOR="nvr --servername $NVIM --remote-wait"
-else
-  export EDITOR="nvim"
+  export GIT_EDITOR="nvr --servername $NVIM --remote-wait +'lua require\"lazygit\"._edit_commit()'"
 fi
 ```
 
@@ -73,18 +78,19 @@ fish:
 ```fish
 if set -q NVIM
   alias nvim "nvim --server $NVIM --remote"
-  set -gx EDITOR "nvim --server $NVIM --remote"
-  set -gx GIT_EDITOR "nvr --servername $NVIM --remote-wait"
-else
-  set -gx EDITOR "nvim"
+  set -gx GIT_EDITOR "nvr --servername $NVIM --remote-wait +'lua require\"lazygit\"._edit_commit()'"
 end
 ```
 
 And configure lazygit:
 ```yaml
 os:
-  editCommand: '$EDITOR'
-  editCommandTemplate: '{{editor}} {{filename}}'
+  editCommandTemplate: >-
+    if [[ -n $NVIM ]]; then
+      nvr --servername $NVIM --remote +'lua require"lazygit"._edit_file{{filename}}'
+    else
+      nvim {{filename}}
+    fi
 promptToReturnFromSubprocess: false
 ```
 
@@ -100,11 +106,6 @@ promptToReturnFromSubprocess: false
 Open lazygit inside `cwd`:
 ```vim
 :LaziGit
-```
-
-Or supply a path:
-```vim
-:LazyGit path/to/repo
 ```
 
 Inside lazygit press `edit` (`e` by default) to open a file in current Neovim instance.
