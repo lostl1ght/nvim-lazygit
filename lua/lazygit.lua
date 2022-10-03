@@ -30,7 +30,7 @@ local function get_root(path)
   return gitdir
 end
 
-local function open_lazygit(path)
+local function open(path)
   if Opened then
     on_exit()
   else
@@ -89,15 +89,14 @@ local default_config = {
 local function setup(opts)
   Config = vim.tbl_extend('force', default_config, opts or {})
   api.nvim_create_user_command('LazyGit', function(args)
-    open_lazygit(args.args)
+    open(args.args)
   end, { nargs = '?', desc = 'Open lazygit', complete = 'dir' })
   api.nvim_set_hl(0, 'LazyGitNormal', { link = 'NormalFloat', default = true })
   api.nvim_set_hl(0, 'LazyGitBorder', { link = 'FloatBorder', default = true })
 end
 
-local function _edit_file(path)
+local function set_prev_win()
   Opened = false
-  api.nvim_cmd({ cmd = 'edit', args = { path } }, {})
   local bufnr = api.nvim_win_get_buf(Winid)
   if api.nvim_win_is_valid(PrevWinid) then
     api.nvim_win_set_buf(PrevWinid, bufnr)
@@ -107,4 +106,14 @@ local function _edit_file(path)
   end
 end
 
-return { setup = setup, open_lazygit = open_lazygit, _edit_file = _edit_file }
+local function _edit_file(path)
+  api.nvim_cmd({ cmd = 'edit', args = { path } }, {})
+  set_prev_win()
+end
+
+return {
+  setup = setup,
+  open = open,
+  _edit_file = _edit_file,
+  _edit_commit = set_prev_win,
+}

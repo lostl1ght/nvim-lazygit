@@ -4,8 +4,9 @@ if vim.g.lazygit_loaded then
     group = group,
     buffer = 0,
     callback = function()
+      vim.bo.bufhidden = 'wipe'
       vim.schedule(function()
-        require('lazygit').open_lazygit()
+        require('lazygit').open()
       end)
     end,
   })
