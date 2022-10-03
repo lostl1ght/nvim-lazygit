@@ -88,9 +88,9 @@ local default_config = {
 
 local function setup(opts)
   Config = vim.tbl_extend('force', default_config, opts or {})
-  api.nvim_create_user_command('LazyGit', function(args)
-    open(args.args)
-  end, { nargs = '?', desc = 'Open lazygit', complete = 'dir' })
+  api.nvim_create_user_command('LazyGit', function()
+    open()
+  end, { nargs = 0, desc = 'Open lazygit', complete = 'dir' })
   api.nvim_set_hl(0, 'LazyGitNormal', { link = 'NormalFloat', default = true })
   api.nvim_set_hl(0, 'LazyGitBorder', { link = 'FloatBorder', default = true })
 end
