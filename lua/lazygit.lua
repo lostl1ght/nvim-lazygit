@@ -21,13 +21,11 @@ local function on_exit()
 end
 
 local function get_root(path)
-  local dir = fn.fnamemodify(fn.resolve(fn.expand(path)), ':p:h')
-  local cmd = string.format('cd %s && git rev-parse --show-toplevel', dir)
-  local gitdir = fn.system(cmd)
-  if gitdir:match('^fatal:.*') then
-    return nil
-  end
-  return gitdir
+  return vim.fs.dirname(vim.fs.find('.git', {
+    path = path,
+    upward = true,
+    type = 'directory',
+  })[1])
 end
 
 local function open(path)
@@ -54,7 +52,7 @@ local function open(path)
     api.nvim_win_set_option(Winid, 'sidescrolloff', 0)
 
     if not vim.g.lazygit_loaded then
-      local dir = path or fn.getcwd()
+      local dir = path ~= '' and path or vim.loop.cwd()
       local gitdir = get_root(dir)
       local cmd
       if gitdir then
@@ -90,7 +88,7 @@ local function setup(opts)
   Config = vim.tbl_extend('force', default_config, opts or {})
   api.nvim_create_user_command('LazyGit', function()
     open()
-  end, { nargs = 0, desc = 'Open lazygit', complete = 'dir' })
+  end, { nargs = 0, desc = 'Open lazygit' })
   api.nvim_set_hl(0, 'LazyGitNormal', { link = 'NormalFloat', default = true })
   api.nvim_set_hl(0, 'LazyGitBorder', { link = 'FloatBorder', default = true })
 end

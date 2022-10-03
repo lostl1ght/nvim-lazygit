@@ -15,7 +15,7 @@ and avoids nested instances.
 
 ## Requirements
 
-* Neovim 0.7+
+* Neovim 0.8+
 * python 3 and [neovim-remote](https://github.com/mhinz/neovim-remote)
 
 ## Installation
