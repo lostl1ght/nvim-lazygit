@@ -1,7 +1,9 @@
 vim.g.lazygit_loaded = false
-local Bufnr = nil
 local Opened = false
-local Config = nil
+local Bufnr
+local Winid
+local PrevWinid
+local Config
 
 local api = vim.api
 local fn = vim.fn
@@ -9,30 +11,13 @@ local fn = vim.fn
 local function on_exit()
   Opened = false
   vim.g.lazygit_loaded = false
-  api.nvim_buf_set_var(Bufnr, 'bufhidden', 'wipe')
-  local winid = fn.bufwinid(Bufnr)
-  if api.nvim_win_is_valid(winid) then
-    api.nvim_win_close(winid, true)
+  if api.nvim_win_is_valid(Winid) then
+    api.nvim_win_close(Winid, true)
   end
   if api.nvim_buf_is_valid(Bufnr) then
+    api.nvim_buf_set_var(Bufnr, 'bufhidden', 'wipe')
     api.nvim_buf_delete(Bufnr, { force = true })
   end
-  Bufnr = nil
-end
-
-local function buf_autocmds(bufnr)
-  local group = api.nvim_create_augroup('LazyGitBuffer', {})
-  api.nvim_create_autocmd({ 'WinLeave', 'BufDelete', 'BufLeave' }, {
-    buffer = bufnr,
-    group = group,
-    callback = function(args)
-      Opened = false
-      local winid = fn.bufwinid(args.buf)
-      if api.nvim_win_is_valid(winid) then
-        api.nvim_win_close(winid, true)
-      end
-    end,
-  })
 end
 
 local function get_root(path)
@@ -50,9 +35,10 @@ local function open_lazygit(path)
     on_exit()
   else
     Opened = true
+    PrevWinid = api.nvim_get_current_win()
+
     if not vim.g.lazygit_loaded then
       Bufnr = api.nvim_create_buf(false, true)
-      buf_autocmds(Bufnr)
     end
 
     local opts = {
@@ -63,8 +49,9 @@ local function open_lazygit(path)
       height = math.floor(Config.height * vim.o.lines),
       border = Config.border,
     }
-    local winid = api.nvim_open_win(Bufnr, true, opts)
-    api.nvim_win_set_option(winid, 'winhl', 'NormalFloat:LazyGitNormal,FloatBorder:LazyGitBorder')
+    Winid = api.nvim_open_win(Bufnr, true, opts)
+    api.nvim_win_set_option(Winid, 'winhl', 'NormalFloat:LazyGitNormal,FloatBorder:LazyGitBorder')
+    api.nvim_win_set_option(Winid, 'sidescrolloff', 0)
 
     if not vim.g.lazygit_loaded then
       local dir = path or fn.getcwd()
@@ -86,7 +73,7 @@ local function open_lazygit(path)
 
     -- because *sometimes* terminal slides to the left for no reason
     -- this seems to fix that
-    api.nvim_win_set_cursor(winid, { 1, 0 })
+    api.nvim_win_set_cursor(Winid, { 1, 0 })
     vim.schedule(function()
       api.nvim_exec('startinsert!', false)
     end)
@@ -108,4 +95,16 @@ local function setup(opts)
   api.nvim_set_hl(0, 'LazyGitBorder', { link = 'FloatBorder', default = true })
 end
 
-return { setup = setup, open_lazygit = open_lazygit }
+local function _edit_file(path)
+  Opened = false
+  api.nvim_cmd({ cmd = 'edit', args = { path } }, {})
+  local bufnr = api.nvim_win_get_buf(Winid)
+  if api.nvim_win_is_valid(PrevWinid) then
+    api.nvim_win_set_buf(PrevWinid, bufnr)
+  end
+  if api.nvim_win_is_valid(Winid) then
+    api.nvim_win_close(Winid, true)
+  end
+end
+
+return { setup = setup, open_lazygit = open_lazygit, _edit_file = _edit_file }
