@@ -7,6 +7,7 @@
 
 #### Fixed
 - Add else clause in readme for setting `GIT_EDITOR`
+- Editing files when not in the root of a repo
 
 #### Updated
 

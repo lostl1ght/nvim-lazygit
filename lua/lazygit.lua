@@ -10,7 +10,7 @@ local fn = vim.fn
 
 local function on_exit()
   Opened = false
-  vim.g.lazygit_loaded = false
+  api.nvim_set_var('lazygit_loaded', false)
   if api.nvim_win_is_valid(Winid) then
     api.nvim_win_close(Winid, true)
   end
@@ -35,7 +35,7 @@ local function open(path)
     Opened = true
     PrevWinid = api.nvim_get_current_win()
 
-    if not vim.g.lazygit_loaded then
+    if not api.nvim_get_var('lazygit_loaded') then
       Bufnr = api.nvim_create_buf(false, true)
     end
 
@@ -51,7 +51,7 @@ local function open(path)
     api.nvim_win_set_option(Winid, 'winhl', 'NormalFloat:LazyGitNormal,FloatBorder:LazyGitBorder')
     api.nvim_win_set_option(Winid, 'sidescrolloff', 0)
 
-    if not vim.g.lazygit_loaded then
+    if not api.nvim_get_var('lazygit_loaded') then
       local dir = path ~= '' and path or vim.loop.cwd()
       local gitdir = get_root(dir)
       local cmd
@@ -66,7 +66,8 @@ local function open(path)
       fn.termopen(cmd, { on_exit = on_exit, width = opts.width })
       api.nvim_buf_set_option(Bufnr, 'bufhidden', 'hide')
       api.nvim_buf_set_option(Bufnr, 'filetype', 'lazygit')
-      vim.g.lazygit_loaded = true
+      api.nvim_buf_set_var(Bufnr, 'lazygit_dir', gitdir)
+      api.nvim_set_var('lazygit_loaded', true)
     end
 
     -- because *sometimes* terminal slides to the left for no reason
@@ -105,7 +106,11 @@ local function set_prev_win()
 end
 
 local function _edit_file(path)
-  api.nvim_cmd({ cmd = 'edit', args = { path } }, {})
+  local dir = api.nvim_buf_get_var(Bufnr, 'lazygit_dir')
+  api.nvim_cmd({
+    cmd = 'edit',
+    args = { dir .. '/' .. path },
+  }, {})
   set_prev_win()
 end
 
