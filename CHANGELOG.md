@@ -4,6 +4,9 @@
 - Neovim 0.7 compatibility branch
 
 #### Changed
+- Renamed command to `Lazygit`
+- Renamed `_edit_file` to `edit_file`
+- Renamed `_edit_commit` to `git_editor`
 
 #### Fixed
 - Add else clause in readme for setting `GIT_EDITOR`
