@@ -55,6 +55,7 @@ Default `setup` values:
   width = 0.9,
   height = 0.9,
   border = 'none',
+  hide_map = '<c-q>'
 }
 ```
 
@@ -65,6 +66,9 @@ Default `setup` values:
 `border` is one of `{'none', 'single', 'double', 'rounded', 'solid', 'shadow'}` or see `:h nvim_open_win()`
 for custom definitions.
 
+`hide_map` should me somthing using `ctrl` or `alt` modifiers so that the window is not getting hidden
+whenever typing a commit text or `nil` to disable.
+
 ### External
 
 To avoid nested Neovim instances set up the following variables:
@@ -73,8 +77,10 @@ bash/zsh:
 ```bash
 if [[ -n "$NVIM" ]]; then
   alias nvim="nvim --server $NVIM --remote"
-  export GIT_EDITOR="nvr --servername $NVIM --remote-wait +'lua require\"lazygit\"._edit_commit()'"
+  export EDITOR="nvim --server $NVIM --remote"
+  export GIT_EDITOR="nvr --servername $NVIM --remote-wait +'lua require\"lazygit\".commit()'"
 else
+  export EDITOR="nvim"
   export GIT_EDITOR="nvim"
 fi
 ```
@@ -83,18 +89,20 @@ fish:
 ```fish
 if set -q NVIM
   alias nvim "nvim --server $NVIM --remote"
-  set -gx GIT_EDITOR "nvr --servername $NVIM --remote-wait +'lua require\"lazygit\"._edit_commit()'"
+  set -gx EDITOR "nvim --server $NVIM --remote"
+  set -gx GIT_EDITOR "nvr --servername $NVIM --remote-wait +'lua require\"lazygit\".commit()'"
 else
+  set -gx EDITOR "nvim"
   set -gx GIT_EDITOR "nvim"
 end
 ```
 
-And configure lazygit:
+And update lazygit configuration:
 ```yaml
 os:
   editCommandTemplate: >-
-    if [[ -n $NVIM ]]; then
-      nvr --servername $NVIM --remote +'lua require"lazygit"._edit_file{{filename}}'
+    if [[ -n "$NVIM" ]]; then
+      nvr --servername $NVIM --remote +'lua require"lazygit".edit{{filename}}'
     else
       nvim {{filename}}
     fi
@@ -112,7 +120,7 @@ promptToReturnFromSubprocess: false
 
 Open lazygit inside `cwd`:
 ```vim
-:LaziGit
+:Lazigit
 ```
 
 Inside lazygit press `edit` (`e` by default) to open a file in current Neovim instance.
