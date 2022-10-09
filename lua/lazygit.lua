@@ -135,14 +135,14 @@ end
 
 function Public.setup(opts)
   Private.config = vim.tbl_extend('force', Private.config, opts or {})
-  api.nvim_create_user_command('LazyGit', function()
+  api.nvim_create_user_command('Lazygit', function()
     Public.open()
   end, { nargs = 0, desc = 'Open lazygit' })
   api.nvim_set_hl(0, 'LazyGitNormal', { link = 'NormalFloat', default = true })
   api.nvim_set_hl(0, 'LazyGitBorder', { link = 'FloatBorder', default = true })
 end
 
-function Public.commit()
+function Public.git_editor()
   Private.state = State.Hidden
   local bufnr = api.nvim_win_get_buf(Private.winid)
   if api.nvim_win_is_valid(Private.prev_winid) then
@@ -157,14 +157,14 @@ function Public.commit()
   Public:hide()
 end
 
-function Public.edit(path)
+function Public.edit_file(path)
   local dir = api.nvim_buf_get_var(Private.bufnr, 'lazygit_dir')
   api.nvim_cmd({
     cmd = 'edit',
     args = { dir .. '/' .. path },
   }, {})
   -- Reusing function for edititng commits
-  Public.commit()
+  Public.git_editor()
 end
 
 ---Hide lazygit window
