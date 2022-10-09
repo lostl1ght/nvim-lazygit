@@ -2,7 +2,8 @@
 
 #### Added
 - Neovim 0.7 compatibility branch
-- Add hide mapping
+- Hide mapping
+- Path to repo argument to `Lazygit` command
 
 #### Changed
 - Renamed command to `Lazygit`
