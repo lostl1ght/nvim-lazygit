@@ -53,6 +53,7 @@ Default `setup` values:
   width = 0.9,
   height = 0.9,
   border = 'none',
+  hide_map = '<c-q>'
 }
 ```
 
@@ -62,6 +63,9 @@ Default `setup` values:
 
 `border` is one of `{'none', 'single', 'double', 'rounded', 'solid', 'shadow'}` or see `:h nvim_open_win()`
 for custom definitions.
+
+`hide_map` should me somthing using `ctrl` or `alt` modifiers so that the window is not getting hidden
+whenever typing a commit text.
 
 ### External
 
