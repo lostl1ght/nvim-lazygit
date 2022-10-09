@@ -44,42 +44,27 @@ function Private:delete_window()
 end
 
 ---Create a buffer and open the terminal
----@param path string|nil
----@return boolean result true if success
-function Private:create_buffer(path)
-  if not api.nvim_buf_is_valid(self.bufnr) then
-    local dir = path ~= '' and path or vim.loop.cwd()
-    local gitdir = self.get_root(dir)
-    local cmd
-    if gitdir then
-      cmd = 'lazygit -p ' .. gitdir
-    else
-      vim.notify('Lazygit: not a git repo', vim.log.levels.ERROR)
-      self:delete_window()
-      return false
-    end
+---@param gitdir string|nil
+function Private:create_buffer(gitdir)
+  self.bufnr = api.nvim_create_buf(false, true)
+  api.nvim_win_set_buf(self.winid, self.bufnr)
 
-    self.bufnr = api.nvim_create_buf(false, true)
-    api.nvim_win_set_buf(self.winid, self.bufnr)
-
-    vim.fn.termopen(cmd, {
-      on_exit = function()
-        self:delete_buffer()
-        self.state = State.Closed
-      end,
-    })
-    api.nvim_buf_set_option(self.bufnr, 'bufhidden', 'hide')
-    api.nvim_buf_set_option(self.bufnr, 'filetype', 'lazygit')
-    api.nvim_buf_set_var(self.bufnr, 'lazygit_dir', gitdir)
-    api.nvim_set_var('lazygit_loaded', true)
-    if self.config.hide_map then
-      vim.keymap.set('t', self.config.hide_map, function()
-        Private:delete_window()
-        Private.state = State.Hidden
-      end)
-    end
+  vim.fn.termopen('lazygit -p ' .. gitdir, {
+    on_exit = function()
+      self:delete_buffer()
+      self.state = State.Closed
+    end,
+  })
+  api.nvim_buf_set_option(self.bufnr, 'bufhidden', 'hide')
+  api.nvim_buf_set_option(self.bufnr, 'filetype', 'lazygit')
+  api.nvim_buf_set_var(self.bufnr, 'lazygit_dir', gitdir)
+  api.nvim_set_var('lazygit_loaded', true)
+  if self.config.hide_map then
+    vim.keymap.set('t', self.config.hide_map, function()
+      Private:delete_window()
+      Private.state = State.Hidden
+    end)
   end
-  return true
 end
 
 ---Set buffer, cursor, start insert mode
@@ -127,17 +112,25 @@ local Public = {}
 function Public.open(path)
   if path then
     Private:delete_buffer()
-    -- Needed so on_exit does not close a new lf instance
+    -- Needed so on_exit does not close a new lazygit instance
     vim.wait(1000, function()
       return Private.state == State.Closed
     end, 50)
   end
   if Private.state ~= State.Opened then
     Private:create_window()
-    if Private:create_buffer(path) then
-      Private:post_open_setup()
-      Private.state = State.Opened
+    if Private.state == State.Closed then
+      local dir = path ~= '' and path or vim.loop.cwd()
+      local gitdir = Private.get_root(dir)
+      if not gitdir then
+        vim.notify('Lazygit: not a git repo', vim.log.levels.ERROR)
+        Private:delete_window()
+        return
+      end
+      Private:create_buffer(gitdir)
     end
+    Private:post_open_setup()
+    Private.state = State.Opened
   end
 end
 
