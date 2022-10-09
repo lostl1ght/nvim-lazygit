@@ -140,15 +140,23 @@ function Public.open(path)
   end
 end
 
+---Setup the plugin
+---@param opts DefaultConfig|nil
 function Public.setup(opts)
   Private.config = vim.tbl_extend('force', Private.config, opts or {})
-  api.nvim_create_user_command('Lazygit', function()
-    Public.open()
-  end, { nargs = 0, desc = 'Open lazygit' })
+  api.nvim_create_user_command('Lazygit', function(arg)
+    local path
+    if arg.args ~= '' then
+      path = arg.args
+    end
+    Public.open(path)
+  end, { nargs = '?', complete = 'dir', desc = 'Open lazygit' })
   api.nvim_set_hl(0, 'LazyGitNormal', { link = 'NormalFloat', default = true })
   api.nvim_set_hl(0, 'LazyGitBorder', { link = 'FloatBorder', default = true })
 end
 
+---Edit git files
+---`Should called from GIT_EDITOR env variable`
 function Public.git_editor()
   Private.state = State.Hidden
   local bufnr = api.nvim_win_get_buf(Private.winid)
@@ -164,6 +172,9 @@ function Public.git_editor()
   Public:hide()
 end
 
+---Edit file
+---`Should be called from lazygit config`
+---@param path string
 function Public.edit_file(path)
   local dir = api.nvim_buf_get_var(Private.bufnr, 'lazygit_dir')
   api.nvim_cmd({
