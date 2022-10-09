@@ -71,10 +71,12 @@ function Private:create_buffer(path)
     api.nvim_buf_set_option(self.bufnr, 'filetype', 'lazygit')
     api.nvim_buf_set_var(self.bufnr, 'lazygit_dir', gitdir)
     api.nvim_set_var('lazygit_loaded', true)
-    vim.keymap.set('t', self.config.hide_map, function()
-      Private:delete_window()
-      Private.state = State.Hidden
-    end)
+    if self.config.hide_map then
+      vim.keymap.set('t', self.config.hide_map, function()
+        Private:delete_window()
+        Private.state = State.Hidden
+      end)
+    end
   end
   return true
 end

@@ -65,7 +65,7 @@ Default `setup` values:
 for custom definitions.
 
 `hide_map` should me somthing using `ctrl` or `alt` modifiers so that the window is not getting hidden
-whenever typing a commit text.
+whenever typing a commit text or `nil` to disable.
 
 ### External
 
