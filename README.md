@@ -118,7 +118,7 @@ promptToReturnFromSubprocess: false
 
 Open lazygit inside `cwd`:
 ```vim
-:LaziGit
+:Lazigit
 ```
 
 Inside lazygit press `edit` (`e` by default) to open a file in current Neovim instance.
