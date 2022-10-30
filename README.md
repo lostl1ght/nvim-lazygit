@@ -59,12 +59,12 @@ Default `setup` values:
 
 ### Values
 
-`width` and `height` are technically any in `[0;1]` but do not make them too small.
+`width` and `height` are technically any in `[0;1]` but should not be too small.
 
 `border` is one of `{'none', 'single', 'double', 'rounded', 'solid', 'shadow'}` or see `:h nvim_open_win()`
 for custom definitions.
 
-`hide_map` should me somthing using `ctrl` or `alt` modifiers so that the window is not getting hidden
+`hide_map` should me something using `ctrl` or `alt` modifiers so that the window is not getting hidden
 whenever typing a commit text or `nil` to disable.
 
 ### External
@@ -76,7 +76,7 @@ bash/zsh:
 if [[ -n "$NVIM" ]]; then
   alias nvim="nvim --server $NVIM --remote"
   export EDITOR="nvim --server $NVIM --remote"
-  export GIT_EDITOR="nvr --servername $NVIM --remote-wait +'lua require\"lazygit\".commit()'"
+  export GIT_EDITOR="nvr --servername $NVIM --remote-wait +'lua require\"lazygit\".git_editor()'"
 else
   export EDITOR="nvim"
   export GIT_EDITOR="nvim"
@@ -88,7 +88,7 @@ fish:
 if set -q NVIM
   alias nvim "nvim --server $NVIM --remote"
   set -gx EDITOR "nvim --server $NVIM --remote"
-  set -gx GIT_EDITOR "nvr --servername $NVIM --remote-wait +'lua require\"lazygit\".commit()'"
+  set -gx GIT_EDITOR "nvr --servername $NVIM --remote-wait +'lua require\"lazygit\".git_editor()'"
 else
   set -gx EDITOR "nvim"
   set -gx GIT_EDITOR "nvim"
@@ -100,7 +100,7 @@ And update lazygit configuration:
 os:
   editCommandTemplate: >-
     if [[ -n $NVIM ]]; then
-      nvr --servername $NVIM --remote +'lua require"lazygit".edit{{filename}}'
+      nvr --servername $NVIM --remote +'lua require"lazygit".edit_file{{filename}}'
     else
       nvim {{filename}}
     fi
