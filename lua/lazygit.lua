@@ -26,6 +26,9 @@ local Private = {
   config = DefaultConfig,
 }
 
+--@class Public
+local Public = {}
+
 ---Delete terminal buffer
 function Private:delete_buffer()
   if api.nvim_buf_is_valid(self.bufnr) then
@@ -61,8 +64,7 @@ function Private:create_buffer(gitdir)
   api.nvim_set_var('lazygit_loaded', true)
   if self.config.hide_map then
     vim.keymap.set('t', self.config.hide_map, function()
-      Private:delete_window()
-      Private.state = State.Hidden
+      Public.hide()
     end)
   end
 end
@@ -80,23 +82,23 @@ function Private:post_open_setup()
 end
 
 function Private:create_window()
-  Private.prev_winid = api.nvim_get_current_win()
+  self.prev_winid = api.nvim_get_current_win()
   local opts = {
     relative = 'editor',
-    col = math.floor((1 - Private.config.width) / 2 * vim.o.columns),
-    row = math.floor((1 - Private.config.height) / 2 * vim.o.lines),
-    width = math.floor(Private.config.width * vim.o.columns),
-    height = math.floor(Private.config.height * vim.o.lines),
-    border = Private.config.border,
+    col = math.floor((1 - self.config.width) / 2 * vim.o.columns),
+    row = math.floor((1 - self.config.height) / 2 * vim.o.lines),
+    width = math.floor(self.config.width * vim.o.columns),
+    height = math.floor(self.config.height * vim.o.lines),
+    border = self.config.border,
   }
-  Private.winid = api.nvim_open_win(0, true, opts)
+  self.winid = api.nvim_open_win(0, true, opts)
   api.nvim_win_set_option(
-    Private.winid,
-    'winhl',
+    self.winid,
+    'winhighlight',
     'NormalFloat:LazyGitNormal,FloatBorder:LazyGitBorder'
   )
-  api.nvim_win_set_option(Private.winid, 'sidescrolloff', 0)
-  api.nvim_win_set_option(Private.winid, 'number', false)
+  api.nvim_win_set_option(self.winid, 'sidescrolloff', 0)
+  api.nvim_win_set_option(self.winid, 'number', false)
 end
 
 function Private.get_root(path)
@@ -106,8 +108,6 @@ function Private.get_root(path)
     type = 'directory',
   })[1])
 end
-
-local Public = {}
 
 function Public.open(path)
   if path then
@@ -163,7 +163,7 @@ function Public.git_editor()
     api.nvim_win_set_option(Private.prev_winid, 'number', nu)
     api.nvim_win_set_option(Private.prev_winid, 'sidescrolloff', siso)
   end
-  Public:hide()
+  Public.hide()
 end
 
 ---Edit file
@@ -180,7 +180,7 @@ function Public.edit_file(path)
 end
 
 ---Hide lazygit window
-function Public:hide()
+function Public.hide()
   Private:delete_window()
   Private.state = State.Hidden
 end

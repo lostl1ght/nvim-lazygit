@@ -7,6 +7,7 @@
 #### Fixed
 
 #### Updated
+- Use `self` in some Private methods
 
 # [v0.3.0]
 
