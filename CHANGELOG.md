@@ -3,6 +3,7 @@
 #### Added
 
 #### Changed
+- Use `minimal` window style
 
 #### Fixed
 

@@ -90,6 +90,7 @@ function Private:create_window()
     width = math.floor(self.config.width * vim.o.columns),
     height = math.floor(self.config.height * vim.o.lines),
     border = self.config.border,
+    style = 'minimal',
   }
   self.winid = api.nvim_open_win(0, true, opts)
   api.nvim_win_set_option(
@@ -152,18 +153,30 @@ end
 ---Edit git files
 ---`Should called from GIT_EDITOR env variable`
 function Public.git_editor()
-  Private.state = State.Hidden
   local bufnr = api.nvim_win_get_buf(Private.winid)
   if api.nvim_win_is_valid(Private.prev_winid) then
-    local nu = api.nvim_win_get_option(Private.prev_winid, 'number')
-    local siso = api.nvim_win_get_option(Private.prev_winid, 'sidescrolloff')
+    local opts = {
+      'number',
+      'relativenumber',
+      'sidescrolloff',
+      'cursorline',
+      'foldcolumn',
+      'spell',
+      'list',
+      'signcolumn',
+      'colorcolumn',
+    }
+    for _, v in ipairs(opts) do
+      opts[v] = api.nvim_win_get_option(Private.prev_winid, v)
+    end
 
     api.nvim_win_set_buf(Private.prev_winid, bufnr)
 
-    api.nvim_win_set_option(Private.prev_winid, 'number', nu)
-    api.nvim_win_set_option(Private.prev_winid, 'sidescrolloff', siso)
+    for _, v in ipairs(opts) do
+      api.nvim_win_set_option(Private.prev_winid, v, opts[v])
+    end
+    Public.hide()
   end
-  Public.hide()
 end
 
 ---Edit file
@@ -171,12 +184,14 @@ end
 ---@param path string
 function Public.edit_file(path)
   local dir = api.nvim_buf_get_var(Private.bufnr, 'lazygit_dir')
+  if api.nvim_win_is_valid(Private.prev_winid) then
+    api.nvim_set_current_win(Private.prev_winid)
+    Public.hide()
+  end
   api.nvim_cmd({
     cmd = 'edit',
     args = { dir .. '/' .. path },
   }, {})
-  -- Reusing function for edititng commits
-  Public.git_editor()
 end
 
 ---Hide lazygit window
