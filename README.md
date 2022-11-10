@@ -4,19 +4,20 @@ A plugin that allows using [lazygit](https://github.com/jesseduffield/lazygit) i
 and avoids nested instances.
 
 ### Table of contents
-* [Requirements](#requirements)
-* [Installation](#installation)
-* [Configuration](#configuration)
-    * [Values](#values)
-    * [External](#external)
-    * [Highlight](#highlight)
-* [Usage](#usage)
-* [Acknowledgement](#acknowledgement)
+
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Configuration](#configuration)
+  - [Values](#values)
+  - [External](#external)
+  - [Highlight](#highlight)
+- [Usage](#usage)
+- [Acknowledgement](#acknowledgement)
 
 ## Requirements
 
-* Neovim 0.8 (for Neovim 0.7 see [0.7-compat](https://github.com/lostl1ght/nvim-lazygit/tree/0.7-compat) branch)
-* python 3 and [neovim-remote](https://github.com/mhinz/neovim-remote)
+- Neovim 0.8 (for Neovim 0.7 see [0.7-compat](https://github.com/lostl1ght/nvim-lazygit/tree/0.7-compat) branch)
+- python 3 and [neovim-remote](https://github.com/mhinz/neovim-remote)
 
 ## Installation
 
@@ -72,6 +73,7 @@ whenever typing a commit text or `nil` to disable.
 To avoid nested Neovim instances set up the following variables:
 
 bash/zsh:
+
 ```bash
 if [[ -n "$NVIM" ]]; then
   alias nvim="nvim --server $NVIM --remote"
@@ -84,6 +86,7 @@ fi
 ```
 
 fish:
+
 ```fish
 if set -q NVIM
   alias nvim "nvim --server $NVIM --remote"
@@ -96,6 +99,7 @@ end
 ```
 
 And update lazygit configuration:
+
 ```yaml
 os:
   editCommandTemplate: >-
@@ -111,12 +115,13 @@ promptToReturnFromSubprocess: false
 
 `nvim-lazygit` defines the following highlight groups with their defaults:
 
-* `LazyGitNormal` - linked to `NormalFloat`, defines fore- and background of the lazygit window.
-* `LazyGitBorder` - linked to `FloatBorder`,  defines fore- and background of the lazygit window border.
+- `LazyGitNormal` - linked to `NormalFloat`, defines fore- and background of the lazygit window.
+- `LazyGitBorder` - linked to `FloatBorder`, defines fore- and background of the lazygit window border.
 
 ## Usage
 
 Open lazygit inside `cwd`:
+
 ```vim
 :Lazigit
 ```
